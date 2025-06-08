@@ -1,10 +1,12 @@
-import { fetchPosts } from '../../Api/api';
-import { useQuery } from '@tanstack/react-query';
+import { deletePost, fetchPosts } from '../../Api/api';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 const FetchRq = () => {
   const [pageNumber,setPageNumber] = useState(0);
+  
+const queryClient = useQueryClient();
 
     const { data,isPending, isError, error } = useQuery({
         queryKey: ["posts",pageNumber], //useState
@@ -13,7 +15,17 @@ const FetchRq = () => {
     //    staleTime:10000,
     // refetchInterval:1000,
     // refetchIntervalInBackground:true,
+    placeholderData:keepPreviousData,
     });
+
+   const deleteMutation = useMutation({
+      mutationFn:(id)=> deletePost(id),
+      onSuccess:(data, id)=>{
+        queryClient.setQueryData(["posts",pageNumber],(curElem)=>{
+          return curElem?.filter((post)=> post.id !==id);
+        })
+      }
+    })
     if(isPending) return <h2>Loading...</h2>
     if(isError) return <h2>Something went Wrong {error.message}</h2>
 
@@ -27,6 +39,7 @@ const FetchRq = () => {
                     <h2>Title: {item?.title}</h2>
                     <p>{item?.body}</p>
                 </NavLink>
+               <button onClick={()=>deleteMutation.mutate(item.id)} className='bg-green-600 px-3 my-4 py-2 rounded-md text-xl'>Delete</button>
                 </div>
                
             ))
