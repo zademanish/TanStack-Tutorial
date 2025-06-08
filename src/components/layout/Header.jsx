@@ -18,6 +18,9 @@ const Header = () => {
                <Link to="/rq"> 
                 <li>FetchRq</li>
                </Link>
+               <Link to="/infinitescroll"> 
+                <li>Infinite-Scroll</li>
+               </Link>
             </ul>
         
     </header>

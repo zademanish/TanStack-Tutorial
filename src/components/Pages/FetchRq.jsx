@@ -1,11 +1,11 @@
-import { deletePost, fetchPosts } from '../../Api/api';
+import { deletePost, fetchPosts, updatePost } from '../../Api/api';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 const FetchRq = () => {
   const [pageNumber,setPageNumber] = useState(0);
-  
+
 const queryClient = useQueryClient();
 
     const { data,isPending, isError, error } = useQuery({
@@ -25,7 +25,23 @@ const queryClient = useQueryClient();
           return curElem?.filter((post)=> post.id !==id);
         })
       }
+    });
+
+    const updateMutation = useMutation({
+      mutationFn:(id)=> updatePost(id),
+      onSuccess:(apidata, postId)=>{
+
+        queryClient.setQueryData(["posts",pageNumber]
+          ,(postsData)=>{
+          return postsData?.map((curPost)=> {
+            return curPost.id === postId ? {...curPost, title:apidata.data.title} : curPost;
+
+           } );
+        })
+      }
     })
+
+
     if(isPending) return <h2>Loading...</h2>
     if(isError) return <h2>Something went Wrong {error.message}</h2>
 
@@ -40,6 +56,8 @@ const queryClient = useQueryClient();
                     <p>{item?.body}</p>
                 </NavLink>
                <button onClick={()=>deleteMutation.mutate(item.id)} className='bg-green-600 px-3 my-4 py-2 rounded-md text-xl'>Delete</button>
+               <button onClick={()=>updateMutation.mutate(item.id)}  className='bg-green-600 px-3 mx-3 my-4 py-2 rounded-md text-xl'>Update</button>
+               
                 </div>
                
             ))
